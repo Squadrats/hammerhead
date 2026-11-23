@@ -31,4 +31,4 @@ jobs:
         run: |
           gh release create "v$VERSION" squadrats-karoo.apk -R "$GITHUB_REPOSITORY" \
             --title "Squadrats for Karoo $VERSION" \
-            --notes "Install via Hammerhead Companion: squadrats.com/karoo. Needs Squadrats Pro."
+            --notes "Install via Squadrats Mobile App. Requires Squadrats Pro."
