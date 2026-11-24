@@ -5,6 +5,9 @@ on:
       version:
         description: Version, e.g. 2026.11.23
         required: true
+      version_code:
+        description: Android versionCode, higher than the last release's
+        required: true
       apk_url:
         description: Temporary URL of the built APK
         required: true
@@ -24,11 +27,27 @@ jobs:
         run: |
           curl -fsSL "$APK_URL" -o squadrats-karoo.apk
           echo "$SHA256  squadrats-karoo.apk" | sha256sum -c -
+      # Karoo's app manifest (karoo-ext KarooAppManifest): the Squadrats app on a Karoo reads it to
+      # learn a newer version is out
+      - name: Write the manifest
+        env:
+          VERSION: ${{ inputs.version }}
+          VERSION_CODE: ${{ inputs.version_code }}
+        run: |
+          jq -n --arg v "$VERSION" --argjson c "$VERSION_CODE" '{
+            label: "Squadrats",
+            packageName: "com.squadrats.mobile",
+            latestApkUrl: "https://github.com/Squadrats/hammerhead/releases/latest/download/squadrats-karoo.apk",
+            latestVersion: $v,
+            latestVersionCode: $c,
+            developer: "Squadrats",
+            description: "Squadrats live on your Karoo. Requires Squadrats Pro."
+          }' > manifest.json
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ inputs.version }}
         run: |
-          gh release create "v$VERSION" squadrats-karoo.apk -R "$GITHUB_REPOSITORY" \
+          gh release create "v$VERSION" squadrats-karoo.apk manifest.json -R "$GITHUB_REPOSITORY" \
             --title "Squadrats for Karoo $VERSION" \
             --notes "Install via Squadrats Mobile App. Requires Squadrats Pro."
